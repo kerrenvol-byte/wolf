@@ -1,0 +1,14 @@
+{
+  "name": "Wolf סל חכם",
+  "short_name": "Wolf",
+  "description": "רשימת קניות חכמה עם השוואת מחירים אמיתית בין הרשתות",
+  "start_url": ".",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#F7F5FA",
+  "theme_color": "#5B2D8F",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

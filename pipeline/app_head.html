@@ -1,0 +1,273 @@
+<title>Wolf — סל חכם</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5B2D8F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<script>
+if ("serviceWorker" in navigator) {
+  try { navigator.serviceWorker.register("sw.js"); } catch (e) { /* sandboxed host — ignore */ }
+}
+</script>
+<style>
+  :root{
+    --canvas:#F7F5FA; --surface:#FFFFFF; --ink:#1A1523; --ink2:#6F6581; --ink3:#A79DB6;
+    --line:#ECE8F1; --line2:#DDD6E8;
+    --accent:#5B2D8F; --accent-ink:#FFFFFF; --accent-soft:#F1EAFA;
+    --peach:#E86A33; --peach-soft:#FFF1E9;
+    --good:#177A4C; --good-soft:#E8F5EE;
+    --shadow:0 1px 2px rgba(26,21,35,.05), 0 4px 16px rgba(26,21,35,.04);
+    --r:14px;
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --canvas:#141019; --surface:#1E1728; --ink:#F0EAF7; --ink2:#A79DB6; --ink3:#6F6581;
+    --line:#2B2138; --line2:#3A2D4C;
+    --accent:#A97FE0; --accent-ink:#170D24; --accent-soft:#2C2040;
+    --peach:#FF9159; --peach-soft:#33221A;
+    --good:#4CC08A; --good-soft:#1E2E22;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }}
+  :root[data-theme="light"]{
+    --canvas:#F7F5FA; --surface:#FFFFFF; --ink:#1A1523; --ink2:#6F6581; --ink3:#A79DB6;
+    --line:#ECE8F1; --line2:#DDD6E8;
+    --accent:#5B2D8F; --accent-ink:#FFFFFF; --accent-soft:#F1EAFA;
+    --peach:#E86A33; --peach-soft:#FFF1E9;
+    --good:#177A4C; --good-soft:#E8F5EE;
+    --shadow:0 1px 2px rgba(26,21,35,.05), 0 4px 16px rgba(26,21,35,.04);
+  }
+  :root[data-theme="dark"]{
+    --canvas:#141019; --surface:#1E1728; --ink:#F0EAF7; --ink2:#A79DB6; --ink3:#6F6581;
+    --line:#2B2138; --line2:#3A2D4C;
+    --accent:#A97FE0; --accent-ink:#170D24; --accent-soft:#2C2040;
+    --peach:#FF9159; --peach-soft:#33221A;
+    --good:#4CC08A; --good-soft:#1E2E22;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--canvas); color:var(--ink); direction:rtl;
+    font-family:-apple-system,"Segoe UI","SF Hebrew","Heebo",Roboto,"Noto Sans Hebrew",sans-serif;
+    -webkit-font-smoothing:antialiased; font-size:15px; line-height:1.45;
+    max-width:560px; margin-inline:auto; min-height:100vh;
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  }
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+  input{font:inherit}
+  .num{font-variant-numeric:tabular-nums}
+  .cap{font-size:11.5px;color:var(--ink2);letter-spacing:.02em}
+
+  /* ---- app bar ---- */
+  .bar{
+    position:sticky;top:0;z-index:30;background:var(--surface);
+    border-bottom:1px solid var(--line);
+    padding:12px 18px calc(12px);
+    display:flex;align-items:center;gap:10px;
+  }
+  .mark{width:30px;height:30px;flex:0 0 auto}
+  .bar .word{font-size:17px;font-weight:800;letter-spacing:.01em}
+  .bar .word small{display:block;font-size:11px;font-weight:400;color:var(--ink2);letter-spacing:.03em;margin-top:1px}
+  .bar .upd{margin-inline-start:auto;text-align:left;font-size:10.5px;color:var(--ink3);line-height:1.5}
+
+  main{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .hidden{display:none !important}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  .pad{padding:14px 16px}
+  h2{font-size:13px;font-weight:700;color:var(--ink2);margin:0 0 4px;letter-spacing:.02em}
+
+  /* ---- search ---- */
+  .searchwrap{position:relative}
+  .search{
+    display:flex;align-items:center;gap:10px;background:var(--surface);
+    border:1.5px solid var(--line2);border-radius:12px;padding:0 14px;height:48px;
+    transition:border-color .15s;
+  }
+  .search:focus-within{border-color:var(--accent)}
+  .search svg{flex:0 0 auto;color:var(--ink3)}
+  .search input{flex:1;border:0;outline:0;background:none;color:var(--ink);font-size:15px;min-width:0}
+  .search input::placeholder{color:var(--ink3)}
+  .sugg{
+    position:absolute;top:calc(100% + 6px);inset-inline:0;z-index:40;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .sugg button{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:11px 14px;border-top:1px solid var(--line)}
+  .sugg button:first-child{border-top:0}
+  .sugg button:hover,.sugg button:focus-visible{background:var(--accent-soft)}
+  .sugg .sn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+  .sugg .su{font-size:11.5px;color:var(--ink2);flex:0 0 auto}
+  .sugg .spr{font-size:13.5px;font-weight:700;flex:0 0 auto;color:var(--accent)}
+
+  /* ---- list rows ---- */
+  .row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+  .row:first-child{border-top:0}
+  .row .ri{flex:1;min-width:0}
+  .row .rn{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .rm{font-size:12px;color:var(--ink2);margin-top:2px}
+  .row .rm b{color:var(--good);font-weight:600}
+  .step{display:flex;align-items:center;border:1px solid var(--line2);border-radius:10px;overflow:hidden;flex:0 0 auto}
+  .step button{width:32px;height:32px;display:grid;place-items:center;color:var(--accent);font-size:16px;font-weight:600}
+  .step button:hover{background:var(--accent-soft)}
+  .step span{min-width:26px;text-align:center;font-size:13.5px;font-weight:700}
+  .rp{text-align:left;flex:0 0 auto;min-width:56px}
+  .rp .v{font-size:15px;font-weight:700}
+  .rx{color:var(--ink3);padding:6px;flex:0 0 auto;border-radius:8px}
+  .rx:hover{color:var(--peach);background:var(--peach-soft)}
+  .note{border-inline-start:2px solid var(--peach)}
+
+  .empty{padding:36px 24px;text-align:center;color:var(--ink2);font-size:13.5px;line-height:1.7}
+  .empty .mark{width:40px;height:40px;opacity:.45;margin-bottom:10px}
+
+  /* ---- total strip ---- */
+  .total{
+    display:flex;align-items:center;gap:12px;padding:14px 16px;
+  }
+  .total .ti{flex:1}
+  .total .tv{font-size:20px;font-weight:800}
+  .total .tc{font-size:12px;color:var(--ink2);margin-top:1px}
+  .btn{background:var(--accent);color:var(--accent-ink);border-radius:11px;padding:11px 18px;font-weight:700;font-size:14px;flex:0 0 auto}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--accent-soft);color:var(--accent)}
+  .btn.sm{padding:8px 13px;font-size:12.5px;border-radius:9px}
+
+  /* ---- compare ---- */
+  .vrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line);width:100%;text-align:start}
+  .vrow:first-child{border-top:0}
+  .vrow:hover{background:var(--accent-soft)}
+  .vrank{width:22px;height:22px;border-radius:7px;background:var(--canvas);border:1px solid var(--line);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--ink2);flex:0 0 auto}
+  .vrow.best .vrank{background:var(--peach);border-color:var(--peach);color:#fff}
+  .vi{flex:1;min-width:0}
+  .vn{font-size:14.5px;font-weight:700}
+  .vn .tag{font-size:10.5px;font-weight:700;color:var(--peach);background:var(--peach-soft);border-radius:6px;padding:2px 7px;margin-inline-start:7px;vertical-align:1px}
+  .vm{font-size:11.5px;color:var(--ink2);margin-top:2px}
+  .vt{text-align:left;flex:0 0 auto}
+  .vt .v{font-size:16px;font-weight:800}
+  .vrow.best .vt .v{color:var(--peach)}
+  .vt .d{font-size:11px;color:var(--ink3);margin-top:1px}
+  .covbar{height:3px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden;max-width:130px}
+  .covbar i{display:block;height:100%;background:var(--accent);border-radius:2px}
+  .src{font-size:11px;color:var(--ink3);padding:10px 16px 12px;line-height:1.6;border-top:1px solid var(--line)}
+
+  /* ---- smart ---- */
+  .srow{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+  .srow:first-child{border-top:0}
+  .si{flex:1;min-width:0}
+  .sn1{font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sn2{font-size:14px;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sgain{color:var(--good);font-weight:700;font-size:13px;white-space:nowrap;flex:0 0 auto}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+  .chip{border:1px solid var(--line2);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--surface)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .muted{font-size:12.5px;color:var(--ink2);padding:8px 0}
+
+  /* ---- nav ---- */
+  nav{
+    position:fixed;bottom:0;inset-inline:0;max-width:560px;margin-inline:auto;z-index:30;
+    background:var(--surface);border-top:1px solid var(--line);
+    display:flex;padding:6px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;color:var(--ink3);font-size:10.5px;font-weight:600;border-radius:10px;position:relative}
+  nav button.on{color:var(--accent)}
+  nav .nbadge{position:absolute;top:2px;inset-inline-start:calc(50% + 8px);background:var(--peach);color:#fff;border-radius:999px;min-width:16px;height:16px;font-size:9.5px;display:grid;place-items:center;font-weight:800;padding:0 4px}
+
+  /* ---- sheet & toast ---- */
+  #overlay{position:fixed;inset:0;background:rgba(20,12,30,.5);z-index:50;display:none;align-items:flex-end;justify-content:center}
+  #overlay.show{display:flex}
+  #sheet{background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:80vh;overflow-y:auto}
+  #sheet h3{margin:0 0 4px;font-size:16.5px}
+  #sheet .sub{font-size:12.5px;color:var(--ink2);margin:0 0 14px}
+  .sheetrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .sheetrow:first-of-type{border-top:0}
+  .sheetrow .mi{color:var(--ink2)}
+  .sheetbtns{display:flex;gap:10px;margin-top:16px}
+  .sheetbtns .btn{flex:1;text-align:center}
+  #toast{position:fixed;bottom:88px;inset-inline:0;display:flex;justify-content:center;z-index:60;pointer-events:none}
+  #toast div{background:var(--ink);color:var(--surface);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;opacity:0;transform:translateY(6px);transition:.22s}
+  #toast.show div{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="wolfmark">
+    <path d="M6 7 L14 13 L10 18 Z M42 7 L34 13 L38 18 Z" fill="var(--peach)"/>
+    <path d="M24 9 L37 17 L33.5 31 L24 41 L14.5 31 L11 17 Z" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M18.5 22.5 L22 25 M29.5 22.5 L26 25" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M24 30 L26.4 33.2 L24 36.4 L21.6 33.2 Z" fill="var(--peach)"/>
+  </g>
+</defs></svg>
+
+<div class="bar">
+  <svg class="mark" viewBox="0 0 48 48" aria-label="Wolf"><use href="#wolfmark"/></svg>
+  <div class="word">Wolf<small>סל חכם · השוואת מחירים</small></div>
+  <div class="upd" id="metaInfo">מחירים רשמיים<br><span id="updDate" class="num"></span></div>
+</div>
+<div id="bootErr" style="display:none;background:#B3261E;color:#fff;padding:10px 16px;font-size:12.5px;line-height:1.5"></div>
+<script>
+window.addEventListener("error", function (e) {
+  var d = document.getElementById("bootErr");
+  if (d) { d.style.display = "block"; d.textContent = "שגיאה בטעינת האפליקציה: " + (e.message || "לא ידועה") + " — נסו לרענן את הדף."; }
+});
+</script>
+
+<main id="tab-list">
+  <div class="searchwrap">
+    <div class="search">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="text" placeholder="חיפוש מוצר… אפשר גם רשימה: חלב, לחם, 2 קוטג׳" autocomplete="off" aria-label="חיפוש מוצרים">
+    </div>
+    <div class="sugg hidden" id="sugg"></div>
+  </div>
+
+  <div class="card" id="listCard">
+    <div class="empty" id="emptyList">
+      <svg class="mark" viewBox="0 0 48 48"><use href="#wolfmark"/></svg><br>
+      חפשו מוצר למעלה או הדביקו רשימה שלמה.<br>כל מחיר כאן אמיתי — מתוך קבצי שקיפות המחירים של הרשתות.
+    </div>
+    <div id="listItems"></div>
+  </div>
+
+  <div class="card hidden" id="totalCard">
+    <div class="total">
+      <div class="ti">
+        <div class="tv num" id="totalVal"></div>
+        <div class="tc" id="totalChain"></div>
+      </div>
+      <button class="btn" id="goCompare">השוואה מלאה</button>
+    </div>
+  </div>
+</main>
+
+<main id="tab-compare" class="hidden">
+  <div class="card">
+    <div class="pad" style="padding-bottom:8px"><h2>דירוג הרשתות לסל שלך</h2></div>
+    <div id="vendors"></div>
+    <div class="src" id="srcNote"></div>
+  </div>
+  <button class="btn ghost" id="markPurchased" style="width:100%;padding:13px">סיימתי לקנות — שמירה להרגלים</button>
+</main>
+
+<main id="tab-smart" class="hidden">
+  <div class="card">
+    <div class="pad" style="padding-bottom:6px"><h2>תחליפים שמוזילים את הסל</h2></div>
+    <div id="swaps"></div>
+  </div>
+  <div class="card pad">
+    <h2>התאמה תזונתית</h2>
+    <div class="chips" id="dietChips"></div>
+    <div id="dietResults"></div>
+  </div>
+  <div class="card">
+    <div class="pad" style="padding-bottom:6px"><h2>אולי חסר לך — לפי ההרגלים שלך</h2></div>
+    <div id="habits"></div>
+  </div>
+</main>
+
+<nav>
+  <button data-tab="list" class="on"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h9"/></svg>רשימה<span class="nbadge hidden" id="countBadge"></span></button>
+  <button data-tab="compare"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>השוואה</button>
+  <button data-tab="smart"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="4"/></svg>חכם</button>
+</nav>
+
+<div id="toast"><div id="toastMsg"></div></div>
+<div id="overlay"><div id="sheet"></div></div>
