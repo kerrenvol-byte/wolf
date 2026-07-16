@@ -1,5 +1,5 @@
 /* Wolf סל חכם — service worker: offline support + fast loads */
-const CACHE = "wolf-v1";
+const CACHE = "wolf-v2";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", e => {

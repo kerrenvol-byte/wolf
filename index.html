@@ -3,6 +3,8 @@
 <meta name="theme-color" content="#5B2D8F">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <script>
 if ("serviceWorker" in navigator) {
   try { navigator.serviceWorker.register("sw.js"); } catch (e) { /* sandboxed host — ignore */ }
@@ -13,7 +15,7 @@ if ("serviceWorker" in navigator) {
     --canvas:#F7F5FA; --surface:#FFFFFF; --ink:#1A1523; --ink2:#6F6581; --ink3:#A79DB6;
     --line:#ECE8F1; --line2:#DDD6E8;
     --accent:#5B2D8F; --accent-ink:#FFFFFF; --accent-soft:#F1EAFA;
-    --peach:#E86A33; --peach-soft:#FFF1E9;
+    --peach:#E86A33; --peach-soft:#FFF1E9; --brand:#B18AE8;
     --good:#177A4C; --good-soft:#E8F5EE;
     --shadow:0 1px 2px rgba(26,21,35,.05), 0 4px 16px rgba(26,21,35,.04);
     --r:14px;
@@ -22,7 +24,7 @@ if ("serviceWorker" in navigator) {
     --canvas:#141019; --surface:#1E1728; --ink:#F0EAF7; --ink2:#A79DB6; --ink3:#6F6581;
     --line:#2B2138; --line2:#3A2D4C;
     --accent:#A97FE0; --accent-ink:#170D24; --accent-soft:#2C2040;
-    --peach:#FF9159; --peach-soft:#33221A;
+    --peach:#FF9159; --peach-soft:#33221A; --brand:#C9A6F2;
     --good:#4CC08A; --good-soft:#1E2E22;
     --shadow:0 1px 2px rgba(0,0,0,.3);
   }}
@@ -30,7 +32,7 @@ if ("serviceWorker" in navigator) {
     --canvas:#F7F5FA; --surface:#FFFFFF; --ink:#1A1523; --ink2:#6F6581; --ink3:#A79DB6;
     --line:#ECE8F1; --line2:#DDD6E8;
     --accent:#5B2D8F; --accent-ink:#FFFFFF; --accent-soft:#F1EAFA;
-    --peach:#E86A33; --peach-soft:#FFF1E9;
+    --peach:#E86A33; --peach-soft:#FFF1E9; --brand:#B18AE8;
     --good:#177A4C; --good-soft:#E8F5EE;
     --shadow:0 1px 2px rgba(26,21,35,.05), 0 4px 16px rgba(26,21,35,.04);
   }
@@ -38,7 +40,7 @@ if ("serviceWorker" in navigator) {
     --canvas:#141019; --surface:#1E1728; --ink:#F0EAF7; --ink2:#A79DB6; --ink3:#6F6581;
     --line:#2B2138; --line2:#3A2D4C;
     --accent:#A97FE0; --accent-ink:#170D24; --accent-soft:#2C2040;
-    --peach:#FF9159; --peach-soft:#33221A;
+    --peach:#FF9159; --peach-soft:#33221A; --brand:#C9A6F2;
     --good:#4CC08A; --good-soft:#1E2E22;
     --shadow:0 1px 2px rgba(0,0,0,.3);
   }
@@ -63,9 +65,9 @@ if ("serviceWorker" in navigator) {
     padding:12px 18px calc(12px);
     display:flex;align-items:center;gap:10px;
   }
-  .mark{width:30px;height:30px;flex:0 0 auto}
-  .bar .word{font-size:17px;font-weight:800;letter-spacing:.01em}
-  .bar .word small{display:block;font-size:11px;font-weight:400;color:var(--ink2);letter-spacing:.03em;margin-top:1px}
+  .mark{width:34px;height:34px;flex:0 0 auto}
+  .bar .word{font-family:"Caveat",cursive;font-size:27px;font-weight:600;color:var(--brand);line-height:1;letter-spacing:.01em}
+  .bar .word small{display:block;font-family:-apple-system,"Segoe UI","SF Hebrew",Roboto,sans-serif;font-size:11px;font-weight:400;color:var(--ink2);letter-spacing:.03em;margin-top:2px}
   .bar .upd{margin-inline-start:auto;text-align:left;font-size:10.5px;color:var(--ink3);line-height:1.5}
 
   main{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
@@ -190,10 +192,9 @@ if ("serviceWorker" in navigator) {
 
 <svg width="0" height="0" style="position:absolute"><defs>
   <g id="wolfmark">
-    <path d="M6 7 L14 13 L10 18 Z M42 7 L34 13 L38 18 Z" fill="var(--peach)"/>
-    <path d="M24 9 L37 17 L33.5 31 L24 41 L14.5 31 L11 17 Z" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/>
-    <path d="M18.5 22.5 L22 25 M29.5 22.5 L26 25" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="M24 30 L26.4 33.2 L24 36.4 L21.6 33.2 Z" fill="var(--peach)"/>
+    <!-- Wolf brand: lavender crescent moon with wolf profile -->
+    <path d="M33 5 A20 20 0 1 0 43.5 33 A17 17 0 1 1 33 5 Z" fill="var(--brand)"/>
+    <path d="M27 15 L34 6.5 L36.5 15.5 L44 22.5 L38.5 23.5 L41.5 28.5" fill="none" stroke="var(--brand)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </defs></svg>
 
