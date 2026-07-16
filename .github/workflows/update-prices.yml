@@ -1,9 +1,11 @@
 name: Daily price refresh
 
+# NOTE: the Israeli chains' price servers block non-Israeli IPs, so this
+# workflow CANNOT run on GitHub's cloud runners (only Shufersal succeeds).
+# The daily refresh runs locally on the owner's machine (Claude scheduled task
+# "wolf-shopping-price-refresh") and pushes here. Kept for manual retries only.
 on:
-  schedule:
-    - cron: "30 4 * * *"   # 04:30 UTC = 07:30 שעון ישראל
-  workflow_dispatch: {}      # allows manual "Run workflow" button
+  workflow_dispatch: {}      # manual "Run workflow" button only
 
 permissions:
   contents: write
